@@ -1,0 +1,1 @@
+This is just a simple API call to Opensea API to get Some events data and display on browser
