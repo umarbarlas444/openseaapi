@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+    
+</head>
+
+<body>
+    <% if(error) {%>
+        <script>alert('Something went wrong')</script>    
+    <% }%>
+    <div class="container mt-5">
+        <div class="text-center">
+            <h1>Filter Events</h1>
+        </div>
+        <form action="/" method="get">
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="accountAddress">Account Address</label>
+                        <input value = "<%= filters.account_address ? filters.account_address: '' %>" type="text" class="form-control" name="accountAddress" id="accountAddress" placeholder="Account Address">
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="form-group">
+                        <label for="eventType">Event Type</label>
+                        <select class="form-control" id="eventType" name="eventType">
+                            <option value="all" <%= filters.event_type == 'all' ? "selected": "" %>>All</option>
+                            <option value="created" <%= filters.event_type == 'created' ? 'selected': '' %>>Created</option>
+                            <option value="successful" <%= filters.event_type == 'successful'? 'selected': '' %>>Successful</option>
+                            <option value="cancelled" <%= filters.event_type == 'cancelled'? 'selected': '' %>>Cancelled</option>
+                            <option value="bid_entered"<%= filters.event_type == 'bid_entered'? 'selected': '' %> >bid Entered</option>
+                            <option value="bid_withdrawn" <%= filters.event_type == 'bid_withdrawn'? 'selected': '' %>>Bid Withdrawn</option>
+                            <option value="transfer" <%= filters.event_type == 'transfer'? 'selected': '' %>>Transfer</option>
+                            <option value="approve" <%= filters.event_type == 'approve'? 'selected': '' %>>Approve</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <div class="form-group">
+                        <label for="collectionSlug">Collection</label>
+                        <input value = "<%= filters.collection_slug ? filters.collection_slug: '' %>" type="text" class="form-control" name="collectionSlug" id="collectionSlug" placeholder="ex. 121212">
+                    </div>
+                </div>
+
+                <div class="col-2">
+                    <button type="submit" class="btn btn-primary mt-4">Update Filters</button>
+                </div>
+
+                <div class="col-2">
+                    <button class="btn btn-secondary mt-4" id="getcsv">Get CSV</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="container-flex mt-5">
+        <table class="table w-100 table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Time</th>
+                    <th scope="col">Owner</th>
+                    <th scope="col">Bid Amount</th>
+                    <th scope="col">Collection</th>
+                    <th scope="col">Token ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% i = 0; %>
+                <% data.forEach(event => { %>
+                    <% i++; %>
+                <tr>
+                    <th scope="row"><%= i %></th>
+                    <td><%= event.createdDate %></td>
+                    <td><%= event.owner %></td>
+                    <td><%= event.bid_amount %></td>
+                    <td><%= event.collectionName %></td>
+                    <td><%= event.tokenId %></td>
+                </tr>
+                <%});%>
+                <% if (i == 0) { %>
+                    <tr>
+                      <td colspan="9" style="color: red;">No Record registered yet.</td>
+                  </tr>
+                  <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        function download_csv(csv, filename) {
+            var csvFile;
+            var downloadLink;
+
+            // CSV FILE
+            csvFile = new Blob([csv], {type: "text/csv"});
+
+            // Download link
+            downloadLink = document.createElement("a");
+
+            // File name
+            downloadLink.download = filename;
+
+            // We have to create a link to the file
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+
+            // Make sure that the link is not displayed
+            downloadLink.style.display = "none";
+
+            // Add the link to your DOM
+            document.body.appendChild(downloadLink);
+
+            // Lanzamos
+            downloadLink.click();
+        }
+
+        function export_table_to_csv(html, filename) {
+            var csv = [];
+            var rows = document.querySelectorAll("table tr");
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = [], cols = rows[i].querySelectorAll("td, th");
+                
+                for (var j = 0; j < cols.length; j++) 
+                    row.push(cols[j].innerText);
+                
+                csv.push(row.join(","));		
+            }
+
+            // Download CSV
+            download_csv(csv.join("\n"), filename);
+        }
+
+        document.getElementById("getcsv").addEventListener("click", function () {
+            var html = document.querySelector("table").outerHTML;
+            export_table_to_csv(html, "table.csv");
+        });
+
+    </script>
+</body>
+
+</html>
